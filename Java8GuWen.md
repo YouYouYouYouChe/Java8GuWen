@@ -316,14 +316,15 @@ ReentrantLock 只适用于代码块锁，而 synchronized 可用于实例方法�
 #### Map
 
 键值对，键不可重复，值可以重复
-HashMap：数组+链表+红黑树，在java8中当链表中的元素超过了 8 个以后，会将链表转换为红黑树
-    扩容机制：HashMap 初始容量大小为 16，默认加载因子为 0.75，当实际大小超过阈值（容量大小 * 加载因子）将会触发扩容，容量扩充为之前的两倍。因为 size 也受到 Integer 的长度限制，且每次扩容两倍，所以HashMap的理论最大容量为 2^30 ，但实际上也受到 JVM 内存大小限制。
+**HashMap**：数组+链表+红黑树，在java8中当链表中的元素超过了 8 个以后，会将链表转换为红黑树
 
-HashTable：线程安全的hashmap，效率较低，但hashMap中可以接受为null的键和值。每个方法都是用sychronized。
+​    **扩容机制**：HashMap 初始容量大小为 16，默认加载因子为 0.75，当实际大小超过阈值（容量大小 * 加载因子）将会触发扩容，容量扩充为之前的两倍。因为 size 也受到 Integer 的长度限制，且每次扩容两倍，所以HashMap的理论最大容量为 2^30 ，但实际上也受到 JVM 内存大小限制。
 
-ConcurrentHashMap：java8新加，线程安全的hashMap，使用的是可重入锁（ReentrantLock），将每个segment分别锁起来，每次写操作时只需要锁一个segment
+**HashTable**：线程安全的hashmap，效率较低，但hashMap中可以接受为null的键和值。每个方法都是用sychronized。
 
-TreeMap：可排序
+**ConcurrentHashMap**：java8新加，线程安全的hashMap，使用的是可重入锁（ReentrantLock），将每个segment分别锁起来，每次写操作时只需要锁一个segment
+
+**TreeMap**：可排序
 
 
 
@@ -511,7 +512,10 @@ ParallelOld，ParallelScavenge的老年代版本，采用多线程的标记整�
 
 避免了全区域的收集，将堆内存划分为大小固定的几个独立区域，包括逻辑上的新生代和老年代，同时在后台设置一个优先级列表，每次根据设定的最大停顿时间，优先回收垃圾最多的区域，确保收集器实现最高的回收效率。
 
+
+
 #### jvm调优
+
 https://cloud.tencent.com/developer/article/1537442
 
 ##### 何时进行调优
@@ -524,30 +528,37 @@ https://cloud.tencent.com/developer/article/1537442
     应用出现 OOM 等异常
     系统吞吐量和响应性能下降
 
+
+
 ##### JVM 调优步骤
-    分析GC日志及dump文件，判断是否需要优化，遇到的瓶颈问题点；
-    确定 JVM 调优量化目标，及调优参数
-    依次调优内存、延迟、吞吐量等指标
-    对比观察调整前后的差异，然后不断分析调整，直到找到最合适的参数
+
+- 分析GC日志及dump文件，判断是否需要优化，遇到的瓶颈问题点；
+- 确定 JVM 调优量化目标，及调优参数
+- 依次调优内存、延迟、吞吐量等指标
+- 对比观察调整前后的差异，然后不断分析调整，直到找到最合适的参数
+
 
 
 ##### JVM 调优参数
-        1. -Xms 初始堆内存大小
-        2. -Xmx 堆内存最大值
-        3. -Xmn 新生代大小，包括 Eden区和两个Survivor区 新生代大小一般设置为堆内存的 1/3 到 1/4。较大的年轻代可以减少 Minor GC 的频率，但如果过大，可能会影响 Full GC 的效率。
-        4. -XX：SurvivorRatio 设置Eden区 与 Survivor区的大小比值
-        5. -XX：NewRatio 老年代与新生代的比例
-        6. -XX：PermSize 初始化永久代大小
-        7. -XX：MaxPermSize 最大永久代大小 java 8之后，永久代被元空间所取代
-        8. -XX:MetaspaceSize 元空间初始大小
-        9. -XX:MaxMetaspaceSize 元空间最大大小
-        10. -XX：MaxDirectMemorySize 直接内存大小 报java.lang.OutOfMemoryError: Direct buffer memory异常可以上调这个值。
-        11. -Xss 线程堆栈大小
-        12. -XX:MaxGCPauseMillis：设置最大 GC 停顿时间，G1 会根据此目标自动调整堆的布局和垃圾回收频率。
+
+-  -Xms 初始堆内存大小
+-  -Xmx 堆内存最大值
+-  -Xmn 新生代大小，包括 Eden区和两个Survivor区 新生代大小一般设置为堆内存的 1/3 到 1/4。较大的年轻代可以减少 Minor GC 的频率，但如果过大，可能会影响 Full GC 的效率。
+-  -XX：SurvivorRatio 设置Eden区 与 Survivor区的大小比值
+-  -XX：NewRatio 老年代与新生代的比例
+-  -XX:MetaspaceSize 元空间初始大小
+-  -XX:MaxMetaspaceSize 元空间最大大小
+-  -XX：MaxDirectMemorySize 直接内存大小 报java.lang.OutOfMemoryError: Direct buffer memory异常可以上调这个值。
+-  -Xss 线程堆栈大小
+-  -XX:MaxGCPauseMillis：设置最大 GC 停顿时间，G1 会根据此目标自动调整堆的布局和垃圾回收频率。
+
+
 
 ##### 监控工具
+
 可以通过 GCViewer GC日志分析工具分析堆内存使用情况。GC停顿时间等
 还可以通过 jmap MAT等工具等分析内存泄漏的原因
+
 
 
 #### java的四种引用类型
@@ -575,6 +586,12 @@ IOC指控制反转，是一种软件设计思想，指把对象的创建和依�
 
 IOC中具体的一种实现方式是依赖注入，依赖注入是指将一个对象由依赖的其他对象的引用注入到该对象中,依赖注入的方式有构造函数注入，setter方法注入，接口注入等等。
 
+**优点**：
+
+- 使用者不需要关心 bean 的实现细节。
+- 不需要创建多个相同的 bean 导致浪费
+- bean 的修改使用方无感知
+
 
 
 ####  AOP
@@ -585,9 +602,10 @@ aop指面向切面，是一种编程范式，在传统的面向对象编程中�
 
 其中AOP对目标对象有两种代理方式
 
-①JDK动态代理，多用于目标类是接口
+- JDK动态代理，使用的代理对象必须实现了一个接口。核心是通过 InvocationHandler 和 Proxy 类来实现的，可以通过重写InvocationHandler 中的 invoke 方法来实现具体的代理逻辑。
 
-②Cglib代理
+- Cglib代理，如果目标没有实现接口，Spring 会选择使用 Cglib 来代理，cglib 是通过继承的方式实现的动态代理，如果某个类被标记为 final，她是无法被代理的。cglib 是通过 MethodInterceptor 接口实现，可以通过实现 intercept 方法来处理具体的代理逻辑
+
 
 
 
@@ -676,7 +694,9 @@ autoDetect，首先通过构造函数使用autowire装配，失败则通过byTyp
 （情况很多，结合项目说几条即可）
 
 - 自己手动处理了异常但是没有抛出。需要抛出异常
+
 - 抛出的异常是检查类异常，如（FilelNotFoundException），可以配置 @Transactional(rollbackFor = Exception.class)
+
 - 非 public 方法会导致事务失效
 - 在类内部调用时，应该将自己作为对象注入
 
@@ -689,10 +709,15 @@ SpringMVC指（Model-View-Controller）模型-视图-控制器的架构模式组
 其流程有
 
 1. 将客户端请求提交到前置控制器 DispatcherServlet
+
 2. 由 DispatcherServlet 提交给处理器映射器（HandlerMapping），找到具体的处理器，并生产处理器对象，然后返回给 DispatcherServlet 
+
 3. DispatcherServlet 调用控制器适配器（HandlerAdapter），适配器经过适配后调用具体的处理器
+
 4. 控制器处理完成后返回逻辑视图名称（ModelAndView），由视图解析器（ViewResolver）解析出实际的视图对象。
+
 5. 视图对象接收模型数据，并将数据渲染为最终的响应结果
+
 6. 视图将渲染好的响应结果返回给前置控制器（DispatcherServlet）,再由前置控制器返回给客户端
 
 
@@ -1169,11 +1194,16 @@ RabbitMQ是基于AMQP协议实现的消息中间件。消息中间件可以用�
 #### 交换机类型
 
 - **直连交换机**（direct Exchange）：通过路由键，将消息发送到与之匹配的队列上
+
 - **主题交换机**（topic Exchange）：可以通过路由键和设置通配符（#（代表零个或多个字符）或*（代表一个字符））进行匹配，将消息发送到一个或多个相匹配的队列上
+
 - **扇形交换机**（Fanout Exchange）：无视路由键，将消息发送到所有与其绑定的队列上
+
 - **延迟交换机**（Delay Exchange）：能延迟发送到队列
+
 - **死信交换机**：可以接受被拒绝的消息，超过最大生存时间的消息，队列达到最大长度后的消息。
-- 
+
+  
 
 #### 死信队列
 
@@ -1279,14 +1309,19 @@ MQ 模式：在 A 服务写数据的时候，需要在同一个事务内发送�
 
 ### 15、DDD 领域驱动设计 及 COLA 架构
 
+
+
 #### DDD（领域驱动设计）
 
 领域驱动设计（Domain-Driven Design，DDD）是一种以领域模型为核心的软件设计方法，由Eric Evans于2003年提出。其核心目标是通过领域模型将复杂的业务逻辑显式化，帮助团队在技术实现与业务需求之间建立一致的语言和结构。
 
 
-#### Cola架构
+
+#### COLA架构
 
 COLA架构全程：Clean Object-Oriented and Layered Architecture - 整洁面向对象分层架构，是阿里开源的，应用领域驱动设计（DDD）设计思想的架构，cola不仅仅是思想
+
+
 
 #### COLA的优势
 
@@ -1309,6 +1344,7 @@ COLA架构全程：Clean Object-Oriented and Layered Architecture - 整洁面向
 - **Application（应用层）**：负责获取输入，组装上下文，参数校验，发送消息，调用领域层服务。
 - **Domain（领域层）**：核心业务逻辑的实现，是应用的核心，不依赖任何其他层次，通过领域服务和领域对象对应用层提供业务实体和业务逻辑计算
 - **Infrastructure（基础设施层）**：负责技术细节的处理。比如数据库的 CRUD，Redis的 GET/SET 等，还包括领域层的防腐，外部依赖需要通过 Gateway 的转义处理，才能被上面的 domain 层使用。
+
 
 
 
@@ -1457,3 +1493,54 @@ COLA架构全程：Clean Object-Oriented and Layered Architecture - 整洁面向
 
 **生活实例：**
 
+
+
+
+
+### 17、线上问题排查
+
+
+
+#### CPU 飙高排查
+
+##### 排查方式
+
+1. 使用 top 指令查看 CPU 占用高的进程
+2. 使用 top -hp [pid] 查看 CPU占用高的线程
+3. 将线程ID转换成十六进制后使用 jstack [PID] 查看具体的堆栈信息
+
+也可以使用 Arthas 等辅助工具。
+
+
+
+##### 常见原因
+
+- 死循环或者无限递归
+- 频繁GC
+- 锁竞争
+
+
+
+#### 内存 OOM 排查
+
+##### 排查方式
+
+1. 确定 OOM 类型
+   - **Java堆内存溢出**：java.lang.OutOfMemoryError: Java heap space 对象被长期持有
+   - **元空间溢出**：java.lang.OutOfMemoryError: Metaspace  类加载过多，动态生产大量类
+   - **直接内存溢出**：java.lang.OutOfMemoryError: Direct buffer memory 如NIO的ByteBuffer未正确释放。
+   - **线程溢出**：java.lang.OutOfMemoryError: unable to create new native thread 
+   - **GC overhead limit exceeded**：GC 效率过低。
+2. 获取堆转储文件（Heap Dump）
+   1. 如果 JVM 启动参数有配置，则会自动生成
+   2. 如果没有也可以手动生成，jmap -dump:format=b,file=dump.hprof [PID]
+3. 使用分析工具进行分析，Eclipse MAT、Jprofile 等
+
+
+
+##### 常见原因
+
+- 静态集合持有对象引用（如 `static List` 未清理）。
+- 缓存未设置过期时间（如 `HashMap` 作为缓存）。
+- 资源未关闭（如数据库连接、文件句柄）。
+- 线程池或定时器未正确销毁。
