@@ -8,7 +8,7 @@
 
 不可变的字符序列，每次都会生成新的String对象，而stringbuffer和stringbuilder则是在原有对象的基础上进行操作
 
-string的长度：
+string的长度：由于 string 的底层是通过 char[] 数组来实现的，而且由于数组下标使用的是 int 类型，所以 string 类型的理论最大长度为 Integer.MAX_VALUE(2^{31}-1)，约 21 亿字符。但实际上还受到 JVM 内存大小的影响。
 
 **Stringbuffer**
 
@@ -317,6 +317,7 @@ ReentrantLock 只适用于代码块锁，而 synchronized 可用于实例方法�
 
 键值对，键不可重复，值可以重复
 HashMap：数组+链表+红黑树，在java8中当链表中的元素超过了 8 个以后，会将链表转换为红黑树
+    扩容机制：HashMap 初始容量大小为 16，默认加载因子为 0.75，当实际大小超过阈值（容量大小 * 加载因子）将会触发扩容，容量扩充为之前的两倍。因为 size 也受到 Integer 的长度限制，且每次扩容两倍，所以HashMap的理论最大容量为 2^30 ，但实际上也受到 JVM 内存大小限制。
 
 HashTable：线程安全的hashmap，效率较低，但hashMap中可以接受为null的键和值。每个方法都是用sychronized。
 
@@ -510,6 +511,43 @@ ParallelOld，ParallelScavenge的老年代版本，采用多线程的标记整�
 
 避免了全区域的收集，将堆内存划分为大小固定的几个独立区域，包括逻辑上的新生代和老年代，同时在后台设置一个优先级列表，每次根据设定的最大停顿时间，优先回收垃圾最多的区域，确保收集器实现最高的回收效率。
 
+#### jvm调优
+https://cloud.tencent.com/developer/article/1537442
+
+##### 何时进行调优
+
+首先需要明确，最有效的优化手段是代码和架构层面的优化，JVM 调优是最后不得已的手段，大部分应用是不需要进行 JVM 优化的。
+其次遇到一下情况，可以考虑进行 JVM 调优
+    Heap内存（老年代）持续上涨，达到最大值
+    Full GC 次数频繁
+    GC 停顿时间过长
+    应用出现 OOM 等异常
+    系统吞吐量和响应性能下降
+
+##### JVM 调优步骤
+    分析GC日志及dump文件，判断是否需要优化，遇到的瓶颈问题点；
+    确定 JVM 调优量化目标，及调优参数
+    依次调优内存、延迟、吞吐量等指标
+    对比观察调整前后的差异，然后不断分析调整，直到找到最合适的参数
+
+
+##### JVM 调优参数
+        1. -Xms 初始堆内存大小
+        2. -Xmx 堆内存最大值
+        3. -Xmn 新生代大小，包括 Eden区和两个Survivor区 新生代大小一般设置为堆内存的 1/3 到 1/4。较大的年轻代可以减少 Minor GC 的频率，但如果过大，可能会影响 Full GC 的效率。
+        4. -XX：SurvivorRatio 设置Eden区 与 Survivor区的大小比值
+        5. -XX：NewRatio 老年代与新生代的比例
+        6. -XX：PermSize 初始化永久代大小
+        7. -XX：MaxPermSize 最大永久代大小 java 8之后，永久代被元空间所取代
+        8. -XX:MetaspaceSize 元空间初始大小
+        9. -XX:MaxMetaspaceSize 元空间最大大小
+        10. -XX：MaxDirectMemorySize 直接内存大小 报java.lang.OutOfMemoryError: Direct buffer memory异常可以上调这个值。
+        11. -Xss 线程堆栈大小
+        12. -XX:MaxGCPauseMillis：设置最大 GC 停顿时间，G1 会根据此目标自动调整堆的布局和垃圾回收频率。
+
+##### 监控工具
+可以通过 GCViewer GC日志分析工具分析堆内存使用情况。GC停顿时间等
+还可以通过 jmap MAT等工具等分析内存泄漏的原因
 
 
 #### java的四种引用类型
@@ -1239,7 +1277,14 @@ MQ 模式：在 A 服务写数据的时候，需要在同一个事务内发送�
 
 
 
-### 15、COLA 架构
+### 15、DDD 领域驱动设计 及 COLA 架构
+
+#### DDD（领域驱动设计）
+
+领域驱动设计（Domain-Driven Design，DDD）是一种以领域模型为核心的软件设计方法，由Eric Evans于2003年提出。其核心目标是通过领域模型将复杂的业务逻辑显式化，帮助团队在技术实现与业务需求之间建立一致的语言和结构。
+
+
+#### Cola架构
 
 COLA架构全程：Clean Object-Oriented and Layered Architecture - 整洁面向对象分层架构，是阿里开源的，应用领域驱动设计（DDD）设计思想的架构，cola不仅仅是思想
 
@@ -1264,7 +1309,6 @@ COLA架构全程：Clean Object-Oriented and Layered Architecture - 整洁面向
 - **Application（应用层）**：负责获取输入，组装上下文，参数校验，发送消息，调用领域层服务。
 - **Domain（领域层）**：核心业务逻辑的实现，是应用的核心，不依赖任何其他层次，通过领域服务和领域对象对应用层提供业务实体和业务逻辑计算
 - **Infrastructure（基础设施层）**：负责技术细节的处理。比如数据库的 CRUD，Redis的 GET/SET 等，还包括领域层的防腐，外部依赖需要通过 Gateway 的转义处理，才能被上面的 domain 层使用。
-
 
 
 
@@ -1412,3 +1456,4 @@ COLA架构全程：Clean Object-Oriented and Layered Architecture - 整洁面向
 观察者模式（Observer Pattern）定义了一种一对多的依赖关系，当一个对象的状态发生改变时，其所有依赖者都会收到通知并自动更新。
 
 **生活实例：**
+
