@@ -516,7 +516,6 @@ ParallelOld，ParallelScavenge的老年代版本，采用多线程的标记整�
 
 #### jvm调优
 
-https://cloud.tencent.com/developer/article/1537442
 
 ##### 何时进行调优
 
