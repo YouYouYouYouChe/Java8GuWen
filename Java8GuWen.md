@@ -35,6 +35,18 @@ string的长度：由于 string 的底层是通过 char[] 数组来实现的，�
 表示该值是常量，不能被更改
 
 
+#### volatile关键字的作用
+
+volatile 关键字有三个作用，一个是**变量可见性**，一个是**禁止重排序**，一个是**保证原子性**
+
+**变量可见性**：可见性问题主要指一个线程修改了共享变量值，而另一个线程却看不到。引起可见性问题的主要原因是每个线程拥有自己的一个高速缓存区——线程工作内存。而volatile关键字，可以让变量被修改时写入内存，同时使其他CPU缓存里缓存了该内存地址的数据失效。需要重新从内存中读入。从而实现变量可见性。
+
+**保证原子性**：对于原子性，volatile只能保证单个操作是原子性的，比如 i++ 这种是不能保证的，因为 i++ 本质是先读再写，两次指令。而对于 flag = true 这种单次操作可以保证，即不依赖原来值的读/写操作
+
+**禁止重排序**：为了性能优化，JMM 在不改变正确语义的前提下，会允许编译器和处理器对指令序列进行重排序。JMM 提供了内存屏障阻止这种重排序。
+在 volatile 写前插入一个 StoreStore 屏障
+在 volatile 写后插入一个 StoreLoad 屏障。
+在 volatile 读后面插入一个 LoadLoad 屏障和 LoadStore 屏障。
 
 #### equals与“==”的区别
 
@@ -144,6 +156,28 @@ throws是声明，可能会抛出一个异常
 
 
 
+#### 线程的状态
+
+1.新建状态（New）：通过new Thread()创建线程对象，但尚未调用start()方法。
+2.就绪状态（Runnable）：调用start()方法后，线程进入就绪状态，此时线程已经具备运行条件，等待CPU调度
+3.运行状态（Running）：获得CPU时间片，执行代码逻辑
+4.阻塞状态（Blocked）：因资源竞争或主动操作暂时放弃CPU使用权
+    比如竞争锁失败，等待其他线程释放锁
+    调用 wait() 方法，需要 notify() 或者 notifyAll() 方法唤醒，也有人叫它等待状态(Waiting)
+    调用 sleep(s)、join(s) 方法，等待时间到后，自动唤醒，也有人叫它有时限等待状态(Time-Waiting)
+5.终止状态(Terminated)：线程执行完毕（run()方法结束）或异常终止。
+
+
+
+#### 终止线程
+
+1.正常运行结束
+2.自定义中断标识，线程运行在可控循环中，比如 while(!flag)
+3.使用 interrupt() 方法，会通过触发 interruptedException 异常(处于阻塞状态)，或者使用 isInterrupt() 标志来终止。
+4.使用 stop()方法，调用Thread类的 stop() 方法，强行终止，可能会导致锁未释放等问题，不推荐使用。
+
+
+
 #### 创建线程的几种方式
 
 - 继承Thread类重写run方法
@@ -181,8 +215,8 @@ unit：时间单位
 
 **workQueue**：等待队列，用于存储等待执行任务的队列
 
-- ArrayBlockingQueue：数组实现的有限队列，可以指定队列长度。
-- LinkedBlockingQueue：基于链表的无限队列，长度可以无限扩展。
+- ArrayBlockingQueue：数组实现的有限队列，必须指定队列长度。采用单锁机制，即入队和出队竞争同一把锁。
+- LinkedBlockingQueue：基于链表的无限队列，可以指定长度，若没有指定最大容量为 Integer.MAX_VALUE，采用锁分离，入队和出队使用不同的锁
 - PriorityBlockingQueue：优先级队列，可以设定队列里任务的优先级。
 
 threadFactory：线程工厂，用于创建新线程的工厂。可以通过自定义线程工厂来定制线程的属性。
@@ -208,12 +242,6 @@ ThreadLocal是通过其底层数据结构ThreadLocalMap完成的，ThreadLocalMa
 
 
 #### TransmittableThreadLocal
-
-
-
-#### sleep() 和 wait() 的区别
-
-sleep来自Thread，wait来自Object，sleep不释放锁，wait释放锁，sleep时间到自动恢复，wait使用notify()或notifyAll()唤醒
 
 
 
@@ -486,7 +514,7 @@ GC判断策略一般有两种——**引用计数法**和**可达性分析法**
 
 
 
-#### jvm有哪些垃圾收集器
+#### 垃圾收集器
 
 Serial与Seria lOld收集器，最早最基本的收集器，Serial执行单线程的复制算法，在进行垃圾回收时会暂停其他用户线程，Serial Old执行单线程的标记整理法。
 
