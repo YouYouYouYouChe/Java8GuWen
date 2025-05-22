@@ -633,7 +633,9 @@ aop指面向切面，是一种编程范式，在传统的面向对象编程中�
 
 - Cglib代理，如果目标没有实现接口，Spring 会选择使用 Cglib 来代理，cglib 是通过继承的方式实现的动态代理，如果某个类被标记为 final，她是无法被代理的。cglib 是通过 MethodInterceptor 接口实现，可以通过实现 intercept 方法来处理具体的代理逻辑
 
-
+**失效场景**：
+1.没有触发 Spring 的代理，比如在类的内部调用方法，这个类没有被 Spring 容器所管理
+2.代理类无法重写或方法目标方法，比如被 private final static 修饰的方法
 
 
 #### Bean
