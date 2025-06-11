@@ -1040,6 +1040,7 @@ bin log 是 Mysql 级别的日志，主要用于主从同步、数据库备份�
 
 ### 10、ElasticSearch
 
+ElasticSearch是一款非常强大的、实时分布式搜索分析引擎，基于Lucene做索引与搜索，使用Java开发，隐藏 Lucene 的复杂性，取而代之的提供一套简单一致的 RESTful API。
 
 
 
